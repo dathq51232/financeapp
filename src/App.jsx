@@ -40,10 +40,13 @@ function Sparkline({data,color}){
   </svg>)
 }
 
-function NavItem({icon,label,active,onClick,special}){
+function NavItem({icon,label,active,onClick,special,badge}){
   return(<button onClick={onClick} style={{flex:special?"0 0 auto":1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,border:"none",background:"none",cursor:"pointer",padding:special?"0":"8px 0",position:"relative",outline:"none"}}>
     {special?(<div style={{width:50,height:50,borderRadius:"50%",background:`linear-gradient(135deg,${C.accent},#d4900f)`,boxShadow:`0 4px 18px ${C.accentGlow},0 0 0 3px ${C.bg}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,marginTop:-16}}>{icon}</div>):(
-      <>{<div style={{width:38,height:38,borderRadius:13,display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,background:active?`${C.accent}18`:"transparent",transition:"background .2s"}}>{icon}</div>}
+      <><div style={{width:38,height:38,borderRadius:13,display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,background:active?`${C.accent}18`:"transparent",transition:"background .2s",position:"relative"}}>
+        {icon}
+        {badge>0&&<div style={{position:"absolute",top:2,right:2,width:16,height:16,borderRadius:"50%",background:C.red,border:`2px solid ${C.bg}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:900,color:"#fff"}}>{badge>9?"9+":badge}</div>}
+      </div>
       <span style={{fontSize:10,fontWeight:active?700:500,color:active?C.accent:C.textMuted,transition:"color .2s"}}>{label}</span>
       {active&&<div style={{position:"absolute",bottom:2,width:4,height:4,borderRadius:"50%",background:C.accent,boxShadow:`0 0 6px ${C.accent}`}}/>}</>
     )}
@@ -194,6 +197,18 @@ export default function App(){
   const monthExpense=monthTx.filter(t=>t.type==="chi").reduce((s,t)=>s+t.amount,0)
   const totalBalance=accounts.reduce((s,a)=>s+a.balance,0)
   const totalDebt=creditCards.reduce((s,c)=>s+c.used,0)
+
+  // Payment reminders — cards due within 5 days, grouped by payment_day
+  const urgentCards=creditCards.filter(c=>getDaysUntil(c.payment_day)<=5 && c.used>0)
+  const urgentTotal=urgentCards.reduce((s,c)=>s+Math.round(c.used*.05),0)
+  const cardsByPayDay=creditCards.reduce((groups,card)=>{
+    const day=card.payment_day
+    if(!groups[day]) groups[day]=[]
+    groups[day].push(card)
+    return groups
+  },{})
+  const sortedPayDays=Object.keys(cardsByPayDay).map(Number).sort((a,b)=>getDaysUntil(a)-getDaysUntil(b))
+
   const filtered=[...transactions].filter(t=>filterType==="all"||t.type===filterType)
   const catExp={};monthTx.filter(t=>t.type==="chi").forEach(t=>{catExp[t.category]=(catExp[t.category]||0)+t.amount})
   const catList=Object.entries(catExp).sort((a,b)=>b[1]-a[1])
@@ -310,6 +325,38 @@ export default function App(){
         </div>
       </div>
       <div style={{padding:"0 16px"}}>
+        {/* URGENT PAYMENT BANNER */}
+        {urgentCards.length>0&&<div onClick={()=>setTab("cards")} style={{background:`linear-gradient(135deg,${C.red}22,${C.red}0e)`,border:`1.5px solid ${C.red}55`,borderRadius:20,padding:"14px 18px",marginBottom:18,cursor:"pointer",position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",top:-20,right:-20,width:80,height:80,borderRadius:"50%",background:`${C.red}18`}}/>
+          <div style={{display:"flex",alignItems:"center",gap:12}}>
+            <div style={{fontSize:28,flexShrink:0}}>🔔</div>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:800,fontSize:14,color:C.red,marginBottom:4}}>
+                Nhắc thanh toán thẻ tín dụng!
+              </div>
+              <div style={{fontSize:12,color:C.textSub,lineHeight:1.5}}>
+                {urgentCards.length} thẻ cần thanh toán trong vòng <strong style={{color:C.red}}>5 ngày tới</strong>
+              </div>
+              {urgentCards.map(c=>{
+                const d=getDaysUntil(c.payment_day)
+                return(
+                  <div key={c.id} style={{display:"flex",alignItems:"center",gap:8,marginTop:6}}>
+                    <div style={{width:6,height:6,borderRadius:"50%",background:c.color,flexShrink:0}}/>
+                    <span style={{fontSize:12,color:C.text,fontWeight:600}}>{c.name}</span>
+                    <span style={{fontSize:11,color:d<=1?C.red:C.accent,fontWeight:700,marginLeft:"auto",flexShrink:0}}>
+                      {d===0?"Hôm nay!":d===1?"Ngày mai!":`Còn ${d} ngày`}
+                    </span>
+                  </div>
+                )
+              })}
+              <div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${C.red}33`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span style={{fontSize:11,color:C.textMuted}}>Tổng tối thiểu cần trả</span>
+                <span style={{fontWeight:800,fontSize:14,color:C.accent}}>{fmt(urgentTotal)}</span>
+              </div>
+            </div>
+          </div>
+        </div>}
+
         <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:20,padding:"16px 18px",marginBottom:18,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div><div style={{...secTitle,marginBottom:4}}>Chi tiêu 7 ngày</div><div style={{fontSize:20,fontWeight:800,color:C.red}}>{fmtShort(spark.reduce((s,v)=>s+v,0))}</div><div style={{fontSize:11,color:C.textMuted,marginTop:2}}>~{fmtShort(spark.reduce((s,v)=>s+v,0)/7)}/ngày</div></div>
           <Sparkline data={spark} color={C.red}/>
@@ -390,13 +437,95 @@ export default function App(){
     </div>}
 
     {tab==="cards"&&<div style={{padding:"52px 16px 0"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}><div style={{fontSize:26,fontWeight:800,letterSpacing:-1}}>Thẻ tín dụng 💳</div><button onClick={openAddCard} style={{background:`${C.accent}18`,border:`1.5px solid ${C.accent}55`,borderRadius:20,padding:"8px 18px",color:C.accent,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>+ Thêm</button></div>
-      <div style={{fontSize:13,color:C.textSub,marginBottom:22}}>Hạn mức & lịch thanh toán</div>
-      {creditCards.length===0&&<div style={{textAlign:"center",padding:"48px 0"}}><div style={{fontSize:40,marginBottom:12}}>💳</div><div style={{color:C.textMuted,fontSize:14,marginBottom:20}}>Chưa có thẻ tín dụng nào</div><button onClick={openAddCard} style={{...btnSt(C.accent),width:"auto",padding:"12px 28px",display:"inline-block"}}>+ Thêm thẻ đầu tiên</button></div>}
-      {creditCards.map(card=><CreditCardFull key={card.id} card={card} onEdit={()=>openEditCard(card)}/>)}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+        <div style={{fontSize:26,fontWeight:800,letterSpacing:-1}}>Thẻ tín dụng 💳</div>
+        <button onClick={openAddCard} style={{background:`${C.accent}18`,border:`1.5px solid ${C.accent}55`,borderRadius:20,padding:"8px 18px",color:C.accent,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>+ Thêm</button>
+      </div>
+      <div style={{fontSize:13,color:C.textSub,marginBottom:18}}>Hạn mức & lịch thanh toán</div>
+
+      {/* URGENT BANNER IN CARDS TAB */}
+      {urgentCards.length>0&&<div style={{background:`linear-gradient(135deg,${C.red}22,${C.red}0e)`,border:`1.5px solid ${C.red}55`,borderRadius:20,padding:"16px 18px",marginBottom:20,position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",top:-25,right:-25,width:100,height:100,borderRadius:"50%",background:`${C.red}15`}}/>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+          <div style={{fontSize:24}}>🔔</div>
+          <div style={{fontWeight:800,fontSize:15,color:C.red}}>Nhắc thanh toán!</div>
+          <div style={{marginLeft:"auto",background:C.red,borderRadius:20,padding:"3px 10px",fontSize:11,fontWeight:800,color:"#fff"}}>{urgentCards.length} thẻ</div>
+        </div>
+        {urgentCards.map(c=>{
+          const d=getDaysUntil(c.payment_day)
+          return(
+            <div key={c.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:"rgba(0,0,0,0.2)",borderRadius:14,marginBottom:8}}>
+              <div style={{width:10,height:10,borderRadius:"50%",background:c.color,flexShrink:0,boxShadow:`0 0 8px ${c.color}`}}/>
+              <div style={{flex:1}}>
+                <div style={{fontWeight:700,fontSize:13,color:C.text}}>{c.name}</div>
+                <div style={{fontSize:11,color:C.textSub,marginTop:2}}>Tối thiểu: <strong style={{color:C.accent}}>{fmt(Math.round(c.used*.05))}</strong> • Ngày TT: {c.payment_day}</div>
+              </div>
+              <div style={{flexShrink:0,textAlign:"right"}}>
+                <div style={{fontSize:13,fontWeight:800,color:d===0?"#ff4444":d===1?C.red:C.accent}}>
+                  {d===0?"⚡ Hôm nay!":d===1?"⚠️ Ngày mai!`":`⏱ ${d} ngày`}
+                </div>
+              </div>
+            </div>
+          )
+        })}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:10,borderTop:`1px solid ${C.red}33`,marginTop:4}}>
+          <span style={{fontSize:12,color:C.textMuted}}>Tổng cần trả tối thiểu ngay</span>
+          <span style={{fontWeight:900,fontSize:16,color:C.accent}}>{fmt(urgentTotal)}</span>
+        </div>
+      </div>}
+
+      {creditCards.length===0&&<div style={{textAlign:"center",padding:"48px 0"}}>
+        <div style={{fontSize:40,marginBottom:12}}>💳</div>
+        <div style={{color:C.textMuted,fontSize:14,marginBottom:20}}>Chưa có thẻ tín dụng nào</div>
+        <button onClick={openAddCard} style={{...btnSt(C.accent),width:"auto",padding:"12px 28px",display:"inline-block"}}>+ Thêm thẻ đầu tiên</button>
+      </div>}
+
+      {/* GROUPED BY PAYMENT DAY */}
+      {sortedPayDays.map(day=>{
+        const group=cardsByPayDay[day]
+        const daysLeft=getDaysUntil(day)
+        const groupDebt=group.reduce((s,c)=>s+c.used,0)
+        const groupMin=group.reduce((s,c)=>s+Math.round(c.used*.05),0)
+        const isUrgent=daysLeft<=5
+        return(
+          <div key={day} style={{marginBottom:24}}>
+            {/* Group header */}
+            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12,padding:"12px 16px",background:isUrgent?`${C.red}18`:C.card,border:`1.5px solid ${isUrgent?C.red+"66":C.border}`,borderRadius:16}}>
+              <div style={{width:42,height:42,borderRadius:13,background:isUrgent?`${C.red}33`:`${C.blue}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>
+                {isUrgent?"🔔":"📅"}
+              </div>
+              <div style={{flex:1}}>
+                <div style={{fontWeight:800,fontSize:14,color:isUrgent?C.red:C.text}}>
+                  Thanh toán ngày {day} hàng tháng
+                </div>
+                <div style={{fontSize:11,color:C.textSub,marginTop:2}}>
+                  {group.length} thẻ • Dư nợ: {fmtShort(groupDebt)} • Tối thiểu: {fmtShort(groupMin)}
+                </div>
+              </div>
+              <div style={{flexShrink:0,textAlign:"right"}}>
+                <div style={{fontSize:13,fontWeight:800,color:daysLeft===0?"#ff4444":daysLeft<=3?C.red:daysLeft<=5?C.accent:C.green}}>
+                  {daysLeft===0?"Hôm nay!":daysLeft===1?"Ngày mai!`":`${daysLeft} ngày`}
+                </div>
+                <div style={{fontSize:10,color:C.textMuted,marginTop:2}}>đến hạn</div>
+              </div>
+            </div>
+            {/* Cards in group */}
+            {group.map(card=><CreditCardFull key={card.id} card={card} onEdit={()=>openEditCard(card)}/>)}
+          </div>
+        )
+      })}
+
+      {/* TOTAL SUMMARY */}
       {creditCards.length>0&&<div style={{background:`${C.red}0e`,border:`1px solid ${C.red}33`,borderRadius:20,padding:"18px 20px",marginTop:6}}>
         <div style={{fontSize:11,color:C.textMuted,letterSpacing:1.5,textTransform:"uppercase",marginBottom:10}}>TỔNG KẾT DƯ NỢ</div>
-        {creditCards.map(c=><div key={c.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><div style={{display:"flex",alignItems:"center",gap:8}}><div style={{width:8,height:8,borderRadius:"50%",background:c.color}}/><span style={{fontSize:13,color:C.textSub}}>{c.name}</span></div><span style={{fontWeight:700,fontSize:13,color:C.red}}>{fmt(c.used)}</span></div>)}
+        {creditCards.map(c=><div key={c.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{width:8,height:8,borderRadius:"50%",background:c.color}}/>
+            <span style={{fontSize:13,color:C.textSub}}>{c.name}</span>
+            <span style={{fontSize:10,color:C.textMuted}}>• ngày {c.payment_day}</span>
+          </div>
+          <span style={{fontWeight:700,fontSize:13,color:C.red}}>{fmt(c.used)}</span>
+        </div>)}
         <div style={{height:1,background:C.border,margin:"12px 0"}}/>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontWeight:800,fontSize:14,color:C.text}}>Tổng cộng</span><span style={{fontWeight:900,fontSize:18,color:C.red}}>{fmt(totalDebt)}</span></div>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:8}}><span style={{fontSize:12,color:C.textSub}}>Tổng tối thiểu cần trả</span><span style={{fontWeight:800,fontSize:14,color:C.accent}}>{fmt(Math.round(totalDebt*.05))}</span></div>
@@ -421,7 +550,7 @@ export default function App(){
         <NavItem icon="🏠" label="Dashboard" active={tab==="overview"} onClick={()=>setTab("overview")}/>
         <NavItem icon="📋" label="Giao dịch" active={tab==="transactions"} onClick={()=>setTab("transactions")}/>
         <NavItem icon="+" label="" active={tab==="add"} onClick={()=>setTab("add")} special/>
-        <NavItem icon="💳" label="Thẻ" active={tab==="cards"} onClick={()=>setTab("cards")}/>
+        <NavItem icon="💳" label="Thẻ" active={tab==="cards"} onClick={()=>setTab("cards")} badge={urgentCards.length}/>
         <NavItem icon="🏦" label="TK" active={tab==="accounts"} onClick={()=>setTab("accounts")}/>
       </div>
     </div>
