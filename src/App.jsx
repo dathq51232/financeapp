@@ -156,6 +156,67 @@ function CreditCardFull({card,onEdit}){
   </div>)
 }
 
+/* ════ CARD FORM — standalone component để tránh mất focus khi re-render ════ */
+function CardFormFields({cardForm, setCardForm, saveCard, mode}){
+  const inp={width:"100%",background:C.surface,border:`1.5px solid ${C.border}`,borderRadius:14,padding:"14px 16px",color:C.text,fontSize:15,outline:"none",boxSizing:"border-box",fontFamily:"inherit"}
+  const lbl={fontSize:10,fontWeight:700,letterSpacing:2,color:C.textMuted,textTransform:"uppercase",marginBottom:8,display:"block"}
+  return(<div style={{display:"flex",flexDirection:"column",gap:13}}>
+    <div><span style={lbl}>Tên thẻ</span>
+      <input style={inp} placeholder="VD: Visa Vietcombank" value={cardForm.name} onChange={e=>setCardForm(f=>({...f,name:e.target.value}))} autoFocus/>
+    </div>
+    <div><span style={lbl}>Ngân hàng</span>
+      <input style={inp} placeholder="VCB, HSBC, MB..." value={cardForm.bank} onChange={e=>setCardForm(f=>({...f,bank:e.target.value}))}/>
+    </div>
+    <div><span style={lbl}>Hạn mức (₫)</span>
+      <input style={{...inp,fontSize:18,fontWeight:800,color:C.accent}} placeholder="0" inputMode="numeric"
+        value={cardForm.credit_limit} onChange={e=>setCardForm(f=>({...f,credit_limit:fmtInput(e.target.value)}))}/>
+    </div>
+    <div><span style={lbl}>Dư nợ hiện tại (₫)</span>
+      <input style={{...inp,fontSize:16,fontWeight:700,color:C.red}} placeholder="0" inputMode="numeric"
+        value={cardForm.used} onChange={e=>setCardForm(f=>({...f,used:fmtInput(e.target.value)}))}/>
+    </div>
+    <div style={{display:"flex",gap:10}}>
+      <div style={{flex:1}}><span style={lbl}>Ngày chốt sao kê</span>
+        <input style={inp} placeholder="15" type="number" min="1" max="31"
+          value={cardForm.closing_day} onChange={e=>setCardForm(f=>({...f,closing_day:e.target.value}))}/>
+      </div>
+      <div style={{flex:1}}><span style={lbl}>Ngày thanh toán</span>
+        <input style={inp} placeholder="5" type="number" min="1" max="31"
+          value={cardForm.payment_day} onChange={e=>setCardForm(f=>({...f,payment_day:e.target.value}))}/>
+      </div>
+    </div>
+    <div><span style={lbl}>Màu thẻ</span>
+      <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+        {CARD_PALETTE.map(c=>(
+          <div key={c} onClick={()=>setCardForm(f=>({...f,color:c}))}
+            style={{width:34,height:34,borderRadius:"50%",background:c,cursor:"pointer",
+              border:cardForm.color===c?"3px solid white":"3px solid transparent",
+              boxShadow:cardForm.color===c?`0 0 12px ${c}99`:"none",transition:"all .15s"}}/>
+        ))}
+      </div>
+    </div>
+    {/* Preview */}
+    {cardForm.name&&(
+      <div style={{background:`${cardForm.color}18`,border:`1.5px solid ${cardForm.color}44`,borderRadius:16,padding:"12px 16px"}}>
+        <div style={{fontSize:10,fontWeight:800,color:cardForm.color,letterSpacing:2,marginBottom:3}}>{cardForm.bank||"BANK"}</div>
+        <div style={{fontWeight:800,fontSize:14,color:C.text,marginBottom:6}}>{cardForm.name}</div>
+        <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:C.textSub}}>
+          <span>Dư nợ: <strong style={{color:C.red}}>{cardForm.used||"0"}₫</strong></span>
+          <span>Hạn: <strong style={{color:C.accent}}>{cardForm.credit_limit||"0"}₫</strong></span>
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:C.textMuted,marginTop:4}}>
+          <span>Chốt: ngày {cardForm.closing_day||"?"}</span>
+          <span>Thanh toán: ngày {cardForm.payment_day||"?"}</span>
+        </div>
+      </div>
+    )}
+    <button onClick={saveCard}
+      style={{background:C.accent,border:"none",borderRadius:14,padding:"15px 0",width:"100%",color:"#07090f",fontWeight:800,fontSize:15,cursor:"pointer",fontFamily:"inherit",boxShadow:`0 4px 14px ${C.accent}44`}}>
+      {mode==="add"?"✓ Thêm thẻ":"✓ Lưu thay đổi"}
+    </button>
+  </div>)
+}
+
 /* ════ MAIN APP ════ */
 export default function App(){
   const [session,setSession]=useState(undefined)
@@ -273,21 +334,6 @@ export default function App(){
   if(loading)return <div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}>
     <div style={{fontSize:40}}>💰</div><div style={{color:C.textSub,fontSize:14}}>Đang tải dữ liệu...</div>
   </div>
-
-  const CardFormFields=()=>(<div style={{display:"flex",flexDirection:"column",gap:13}}>
-    <div><span style={lbl}>Tên thẻ</span><input style={inputSt} placeholder="VD: Visa Vietcombank" value={cardForm.name} onChange={e=>setCardForm(f=>({...f,name:e.target.value}))}/></div>
-    <div><span style={lbl}>Ngân hàng</span><input style={inputSt} placeholder="VCB, HSBC, MB..." value={cardForm.bank} onChange={e=>setCardForm(f=>({...f,bank:e.target.value}))}/></div>
-    <div><span style={lbl}>Hạn mức (₫)</span><input style={{...inputSt,fontSize:18,fontWeight:800,color:C.accent}} placeholder="0" inputMode="numeric" value={cardForm.credit_limit} onChange={e=>setCardForm(f=>({...f,credit_limit:fmtInput(e.target.value)}))}/></div>
-    <div><span style={lbl}>Dư nợ (₫)</span><input style={{...inputSt,fontSize:16,fontWeight:700,color:C.red}} placeholder="0" inputMode="numeric" value={cardForm.used} onChange={e=>setCardForm(f=>({...f,used:fmtInput(e.target.value)}))}/></div>
-    <div style={{display:"flex",gap:10}}>
-      <div style={{flex:1}}><span style={lbl}>Ngày chốt</span><input style={inputSt} placeholder="15" type="number" min="1" max="31" value={cardForm.closing_day} onChange={e=>setCardForm(f=>({...f,closing_day:e.target.value}))}/></div>
-      <div style={{flex:1}}><span style={lbl}>Ngày TT</span><input style={inputSt} placeholder="5" type="number" min="1" max="31" value={cardForm.payment_day} onChange={e=>setCardForm(f=>({...f,payment_day:e.target.value}))}/></div>
-    </div>
-    <div><span style={lbl}>Màu thẻ</span><div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-      {CARD_PALETTE.map(c=><div key={c} onClick={()=>setCardForm(f=>({...f,color:c}))} style={{width:34,height:34,borderRadius:"50%",background:c,cursor:"pointer",border:cardForm.color===c?"3px solid white":"3px solid transparent",boxShadow:cardForm.color===c?`0 0 12px ${c}99`:"none",transition:"all .15s"}}/>)}
-    </div></div>
-    <button style={btnSt(C.accent)} onClick={saveCard}>{cardModal?.mode==="add"?"✓ Thêm thẻ":"✓ Lưu thay đổi"}</button>
-  </div>)
 
   return(<div style={{minHeight:"100vh",background:C.bg,color:C.text,fontFamily:"'Inter','Be Vietnam Pro',sans-serif",paddingBottom:100}}>
 
@@ -590,7 +636,12 @@ export default function App(){
           <div style={{fontWeight:800,fontSize:20}}>{cardModal.mode==="add"?"Thêm thẻ tín dụng":"Chỉnh sửa thẻ"}</div>
           {cardModal.mode==="edit"&&<button onClick={()=>deleteCard(cardModal.id)} style={{background:C.redGlow,border:`1px solid ${C.red}44`,borderRadius:12,padding:"8px 16px",color:C.red,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>🗑 Xoá</button>}
         </div>
-        <CardFormFields/>
+        <CardFormFields
+          cardForm={cardForm}
+          setCardForm={setCardForm}
+          saveCard={saveCard}
+          mode={cardModal.mode}
+        />
       </div>
     </div>}
 
