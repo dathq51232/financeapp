@@ -1,0 +1,5 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #080c14; color: #e6eaf4; font-family: 'Be Vietnam Pro', 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+::-webkit-scrollbar { display: none; }
+input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.4); }
+select option { background: #0e1520; color: #e6eaf4; }
