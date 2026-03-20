@@ -37,12 +37,24 @@ export default function Auth() {
     if (password !== confirmPw) { setError('Mật khẩu xác nhận không khớp'); setLoading(false); return }
     if (password.length < 6) { setError('Mật khẩu tối thiểu 6 ký tự'); setLoading(false); return }
     if (!fullName.trim()) { setError('Vui lòng nhập họ tên'); setLoading(false); return }
+    // Step 1: Sign up
     const { data, error } = await supabase.auth.signUp({
       email, password,
       options: { data: { full_name: fullName, avatar_color: avatarColor } }
     })
     if (error) { setError(error.message); setLoading(false); return }
-    if (data.user && !data.session) setScreen('verify')
+
+    // Step 2: If email confirmation disabled → session exists → already logged in
+    if (data.session) {
+      // Auto logged in, app will redirect
+      setLoading(false)
+      return
+    }
+
+    // Step 3: Email confirmation required
+    if (data.user && !data.session) {
+      setScreen('verify')
+    }
     setLoading(false)
   }
 
