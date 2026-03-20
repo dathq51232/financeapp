@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { supabase } from "./lib/supabase"
 import * as db from "./lib/db"
 import Auth from "./pages/Auth"
+import Profile from "./pages/Profile"
 
 const C={bg:"#080c14",surface:"#0e1520",card:"#121b2a",border:"#1a2a40",borderLight:"#243348",accent:"#f0b429",accentGlow:"rgba(240,180,41,0.18)",green:"#17d9a1",greenGlow:"rgba(23,217,161,0.15)",red:"#f05252",redGlow:"rgba(240,82,82,0.15)",blue:"#5b8def",purple:"#9f7aea",text:"#e6eaf4",textSub:"#8496b5",textMuted:"#445570",glass:"rgba(10,15,24,0.9)"}
 const CAT_ICONS={"Ăn uống":"🍜","Di chuyển":"🚗","Nhà ở":"🏠","Mua sắm":"🛍","Giải trí":"🎮","Sức khỏe":"💊","Giáo dục":"📚","Lương":"💼","Freelance":"💻","Đầu tư":"📈","Thưởng":"🎁","Khác":"📦"}
@@ -49,6 +50,11 @@ function NavItem({icon,label,active,onClick,special}){
   </button>)
 }
 
+function Avatar({name,color,size=36}){
+  const initials=(name||"?").trim().split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase()
+  return(<div style={{width:size,height:size,borderRadius:"50%",background:color||C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontSize:size*.38,fontWeight:900,color:"#07090f",flexShrink:0,boxShadow:`0 2px 10px ${color||C.accent}66`}}>{initials}</div>)
+}
+
 function AccCard({acc,onClick}){
   const [p,setP]=useState(false)
   return(<div onClick={onClick} onMouseDown={()=>setP(true)} onMouseUp={()=>setP(false)} onMouseLeave={()=>setP(false)}
@@ -76,10 +82,10 @@ function CreditCardMini({card,onClick}){
       <div style={{height:"100%",width:`${Math.min(pct,100)}%`,background:pct>80?C.red:pct>60?C.accent:card.color,borderRadius:4,boxShadow:`0 0 8px ${pct>80?C.red:card.color}66`}}/>
     </div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-      <div style={{fontSize:11,color:C.textSub}}>{fmtShort(card.used)} / {fmtShort(card.credit_limit)}</div>
+      <div style={{fontSize:11,color:C.textSub}}>{fmtShort(card.used)}/{fmtShort(card.credit_limit)}</div>
       <div style={{fontSize:10,fontWeight:700,color:dP<=3?C.red:C.green}}>TT:{dP}ng</div>
     </div>
-    <div style={{fontSize:9,color:C.textMuted,marginTop:4}}>{pct}% • Chốt ngày {card.closing_day}</div>
+    <div style={{fontSize:9,color:C.textMuted,marginTop:4}}>{pct}%•Chốt ngày {card.closing_day}</div>
     <div style={{position:"absolute",bottom:10,right:12,fontSize:9,color:`${card.color}77`,fontWeight:700}}>SỬA ✏</div>
   </div>)
 }
@@ -100,7 +106,7 @@ function TxRow({tx,accounts,onDelete}){
       </div>
     </div>
     {open&&(<div style={{padding:"10px 16px 13px",borderTop:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(8,12,20,.6)"}}>
-      <div style={{fontSize:12,color:C.textSub}}>{acc?`${acc.icon} ${acc.name}`:"—"} · {tx.date}</div>
+      <div style={{fontSize:12,color:C.textSub}}>{acc?`${acc.icon} ${acc.name}`:"—"}·{tx.date}</div>
       <button onClick={()=>onDelete(tx)} style={{background:C.redGlow,border:`1px solid ${C.red}44`,borderRadius:10,padding:"6px 14px",color:C.red,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🗑 Xoá</button>
     </div>)}
   </div>)
@@ -112,10 +118,7 @@ function CreditCardFull({card,onEdit}){
     <div style={{position:"absolute",top:-30,right:-30,width:130,height:130,borderRadius:"50%",background:`${card.color}14`}}/>
     <div style={{padding:"20px 20px 16px"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16}}>
-        <div>
-          <div style={{fontSize:10,fontWeight:800,letterSpacing:2,color:card.color,textTransform:"uppercase",marginBottom:4}}>{card.bank}</div>
-          <div style={{fontWeight:800,fontSize:17,color:C.text}}>{card.name}</div>
-        </div>
+        <div><div style={{fontSize:10,fontWeight:800,letterSpacing:2,color:card.color,textTransform:"uppercase",marginBottom:4}}>{card.bank}</div><div style={{fontWeight:800,fontSize:17,color:C.text}}>{card.name}</div></div>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <div style={{fontSize:28}}>💳</div>
           <button onClick={onEdit} style={{background:`${card.color}22`,border:`1.5px solid ${card.color}55`,borderRadius:12,padding:"7px 14px",color:card.color,fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>✏ Sửa</button>
@@ -127,9 +130,7 @@ function CreditCardFull({card,onEdit}){
           <span style={{fontWeight:800,fontSize:18,color:pct>80?C.red:C.text}}>{fmtShort(card.used)}</span>
           <span style={{fontWeight:700,fontSize:14,color:C.textSub}}>{fmtShort(card.credit_limit)}</span>
         </div>
-        <div style={{height:7,background:C.border,borderRadius:7}}>
-          <div style={{height:"100%",width:`${Math.min(pct,100)}%`,borderRadius:7,background:pct>80?C.red:pct>60?C.accent:card.color,boxShadow:`0 0 10px ${pct>80?C.red:card.color}77`}}/>
-        </div>
+        <div style={{height:7,background:C.border,borderRadius:7}}><div style={{height:"100%",width:`${Math.min(pct,100)}%`,borderRadius:7,background:pct>80?C.red:pct>60?C.accent:card.color,boxShadow:`0 0 10px ${pct>80?C.red:card.color}77`}}/></div>
         <div style={{fontSize:11,color:pct>80?C.red:C.textMuted,marginTop:7,fontWeight:600}}>{pct}% hạn mức đã sử dụng</div>
       </div>
     </div>
@@ -152,9 +153,12 @@ function CreditCardFull({card,onEdit}){
   </div>)
 }
 
-/* ════ MAIN ════ */
+/* ════ MAIN APP ════ */
 export default function App(){
-  const [session,setSession]=useState(undefined) // undefined=loading, null=no session
+  const [session,setSession]=useState(undefined)
+  const [user,setUser]=useState(null)
+  const [profile,setProfile]=useState(null)
+  const [showProfile,setShowProfile]=useState(false)
   const [accounts,setAccounts]=useState([])
   const [transactions,setTransactions]=useState([])
   const [creditCards,setCreditCards]=useState([])
@@ -162,8 +166,6 @@ export default function App(){
   const [tab,setTab]=useState("overview")
   const [filterType,setFilterType]=useState("all")
   const [savingTx,setSavingTx]=useState(false)
-
-  // form states
   const [form,setForm]=useState({type:"chi",amount:"",category:"",note:"",date:today.toISOString().slice(0,10),account_id:""})
   const [accModal,setAccModal]=useState(null)
   const [accForm,setAccForm]=useState({name:"",balance:"",icon:"🏦",color:C.green})
@@ -171,23 +173,20 @@ export default function App(){
   const [cardModal,setCardModal]=useState(null)
   const [cardForm,setCardForm]=useState(BLANK_CARD)
 
-  // auth listener
   useEffect(()=>{
-    supabase.auth.getSession().then(({data:{session}})=>setSession(session))
-    const {data:{subscription}}=supabase.auth.onAuthStateChange((_,session)=>setSession(session))
-    return ()=>subscription.unsubscribe()
+    supabase.auth.getSession().then(({data:{session}})=>{setSession(session);setUser(session?.user??null)})
+    const {data:{subscription}}=supabase.auth.onAuthStateChange((_,session)=>{setSession(session);setUser(session?.user??null)})
+    return()=>subscription.unsubscribe()
   },[])
 
-  // load data when logged in
   useEffect(()=>{
-    if(!session)return
+    if(!session){setAccounts([]);setTransactions([]);setCreditCards([]);setProfile(null);return}
     setLoading(true)
-    Promise.all([db.getAccounts(),db.getTransactions(),db.getCreditCards()])
-      .then(([accs,txs,cards])=>{setAccounts(accs);setTransactions(txs);setCreditCards(cards)})
+    Promise.all([db.getAccounts(),db.getTransactions(),db.getCreditCards(),db.getProfile()])
+      .then(([accs,txs,cards,prof])=>{setAccounts(accs);setTransactions(txs);setCreditCards(cards);setProfile(prof)})
       .finally(()=>setLoading(false))
   },[session])
 
-  // set default account_id when accounts loaded
   useEffect(()=>{if(accounts.length&&!form.account_id)setForm(f=>({...f,account_id:accounts[0].id}))},[accounts])
 
   const monthTx=transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===thisMonth&&d.getFullYear()===thisYear})
@@ -200,6 +199,9 @@ export default function App(){
   const catList=Object.entries(catExp).sort((a,b)=>b[1]-a[1])
   const spark=Array.from({length:7},(_,i)=>{const d=new Date(today);d.setDate(today.getDate()-6+i);const ds=d.toISOString().slice(0,10);return transactions.filter(t=>t.type==="chi"&&t.date===ds).reduce((s,t)=>s+t.amount,0)})
 
+  const displayName=profile?.full_name||user?.user_metadata?.full_name||user?.email?.split("@")[0]||"User"
+  const avatarColor=profile?.avatar_color||user?.user_metadata?.avatar_color||C.accent
+
   const addTransaction=async()=>{
     if(!form.amount||!form.category||!form.account_id)return
     const amt=parseInt(form.amount.replace(/\D/g,""));if(!amt)return
@@ -208,17 +210,15 @@ export default function App(){
       const newTx=await db.createTransaction({...form,amount:amt})
       setTransactions(txs=>[newTx,...txs])
       setAccounts(accs=>accs.map(a=>a.id===form.account_id?{...a,balance:a.balance+(form.type==="thu"?amt:-amt)}:a))
-      setForm({type:"chi",amount:"",category:"",note:"",date:today.toISOString().slice(0,10),account_id:form.account_id})
+      setForm(f=>({...f,amount:"",category:"",note:""}))
       setTab("transactions")
     }catch(e){alert(e.message)}finally{setSavingTx(false)}
   }
-
   const deleteTx=async(tx)=>{
     await db.deleteTransaction(tx.id,tx)
     setTransactions(ts=>ts.filter(t=>t.id!==tx.id))
     setAccounts(accs=>accs.map(a=>a.id===tx.account_id?{...a,balance:a.balance+(tx.type==="thu"?-tx.amount:tx.amount)}:a))
   }
-
   const openAddAcc=()=>{setAccForm({name:"",balance:"",icon:"🏦",color:C.green});setAccModal({mode:"add"})}
   const openEditAcc=acc=>{setAccForm({name:acc.name,balance:fmtN(acc.balance),icon:acc.icon,color:acc.color});setAccModal({mode:"edit",id:acc.id})}
   const saveAcc=async()=>{
@@ -229,12 +229,8 @@ export default function App(){
   }
   const deleteAcc=async(id)=>{
     if(accounts.length<=1)return
-    await db.deleteAccount(id)
-    setAccounts(accs=>accs.filter(a=>a.id!==id))
-    setTransactions(ts=>ts.filter(t=>t.account_id!==id))
-    setAccModal(null)
+    await db.deleteAccount(id);setAccounts(accs=>accs.filter(a=>a.id!==id));setTransactions(ts=>ts.filter(t=>t.account_id!==id));setAccModal(null)
   }
-
   const openAddCard=()=>{setCardForm(BLANK_CARD);setCardModal({mode:"add"})}
   const openEditCard=card=>{setCardForm({name:card.name,credit_limit:fmtN(card.credit_limit),used:fmtN(card.used),closing_day:String(card.closing_day),payment_day:String(card.payment_day),bank:card.bank,color:card.color});setCardModal({mode:"edit",id:card.id})}
   const saveCard=async()=>{
@@ -246,9 +242,6 @@ export default function App(){
   }
   const deleteCard=async(id)=>{await db.deleteCreditCard(id);setCreditCards(cs=>cs.filter(c=>c.id!==id));setCardModal(null)}
 
-  const signOut=()=>supabase.auth.signOut()
-
-  // styles
   const inputSt={width:"100%",background:C.surface,border:`1.5px solid ${C.border}`,borderRadius:14,padding:"14px 16px",color:C.text,fontSize:15,outline:"none",boxSizing:"border-box",fontFamily:"inherit"}
   const selSt={...inputSt,appearance:"none"}
   const btnSt=c=>({background:c,border:"none",borderRadius:16,padding:"15px 0",width:"100%",color:c===C.accent?"#07090f":C.text,fontWeight:800,fontSize:15,cursor:"pointer",fontFamily:"inherit",boxShadow:`0 4px 14px ${c}44`})
@@ -260,35 +253,24 @@ export default function App(){
   const filtB=a=>({border:`1.5px solid ${a?C.accent:C.border}`,background:a?`${C.accent}18`:"transparent",borderRadius:20,padding:"7px 16px",color:a?C.accent:C.textSub,fontWeight:a?700:500,fontSize:12,cursor:"pointer",fontFamily:"inherit"})
   const secTitle={fontSize:12,fontWeight:700,color:C.textMuted,letterSpacing:1.5,textTransform:"uppercase"}
 
-  if(session===undefined) return <div style={{minHeight:"100vh",background:C.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:32}}>💰</div>
-  if(!session) return <Auth/>
-  if(loading) return <div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}>
-    <div style={{fontSize:40}}>💰</div>
-    <div style={{color:C.textSub,fontSize:14}}>Đang tải dữ liệu...</div>
+  if(session===undefined)return <div style={{minHeight:"100vh",background:C.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:40}}>💰</div>
+  if(!session)return <Auth/>
+  if(loading)return <div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}>
+    <div style={{fontSize:40}}>💰</div><div style={{color:C.textSub,fontSize:14}}>Đang tải dữ liệu...</div>
   </div>
 
   const CardFormFields=()=>(<div style={{display:"flex",flexDirection:"column",gap:13}}>
     <div><span style={lbl}>Tên thẻ</span><input style={inputSt} placeholder="VD: Visa Vietcombank" value={cardForm.name} onChange={e=>setCardForm(f=>({...f,name:e.target.value}))}/></div>
     <div><span style={lbl}>Ngân hàng</span><input style={inputSt} placeholder="VCB, HSBC, MB..." value={cardForm.bank} onChange={e=>setCardForm(f=>({...f,bank:e.target.value}))}/></div>
-    <div><span style={lbl}>Hạn mức tín dụng (₫)</span><input style={{...inputSt,fontSize:18,fontWeight:800,color:C.accent}} placeholder="0" inputMode="numeric" value={cardForm.credit_limit} onChange={e=>setCardForm(f=>({...f,credit_limit:fmtInput(e.target.value)}))}/></div>
-    <div><span style={lbl}>Dư nợ hiện tại (₫)</span><input style={{...inputSt,fontSize:16,fontWeight:700,color:C.red}} placeholder="0" inputMode="numeric" value={cardForm.used} onChange={e=>setCardForm(f=>({...f,used:fmtInput(e.target.value)}))}/></div>
+    <div><span style={lbl}>Hạn mức (₫)</span><input style={{...inputSt,fontSize:18,fontWeight:800,color:C.accent}} placeholder="0" inputMode="numeric" value={cardForm.credit_limit} onChange={e=>setCardForm(f=>({...f,credit_limit:fmtInput(e.target.value)}))}/></div>
+    <div><span style={lbl}>Dư nợ (₫)</span><input style={{...inputSt,fontSize:16,fontWeight:700,color:C.red}} placeholder="0" inputMode="numeric" value={cardForm.used} onChange={e=>setCardForm(f=>({...f,used:fmtInput(e.target.value)}))}/></div>
     <div style={{display:"flex",gap:10}}>
-      <div style={{flex:1}}><span style={lbl}>Ngày chốt sao kê</span><input style={inputSt} placeholder="15" type="number" min="1" max="31" value={cardForm.closing_day} onChange={e=>setCardForm(f=>({...f,closing_day:e.target.value}))}/></div>
-      <div style={{flex:1}}><span style={lbl}>Ngày thanh toán</span><input style={inputSt} placeholder="5" type="number" min="1" max="31" value={cardForm.payment_day} onChange={e=>setCardForm(f=>({...f,payment_day:e.target.value}))}/></div>
+      <div style={{flex:1}}><span style={lbl}>Ngày chốt</span><input style={inputSt} placeholder="15" type="number" min="1" max="31" value={cardForm.closing_day} onChange={e=>setCardForm(f=>({...f,closing_day:e.target.value}))}/></div>
+      <div style={{flex:1}}><span style={lbl}>Ngày TT</span><input style={inputSt} placeholder="5" type="number" min="1" max="31" value={cardForm.payment_day} onChange={e=>setCardForm(f=>({...f,payment_day:e.target.value}))}/></div>
     </div>
-    <div><span style={lbl}>Màu thẻ</span>
-      <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-        {CARD_PALETTE.map(c=><div key={c} onClick={()=>setCardForm(f=>({...f,color:c}))} style={{width:34,height:34,borderRadius:"50%",background:c,cursor:"pointer",border:cardForm.color===c?"3px solid white":"3px solid transparent",boxShadow:cardForm.color===c?`0 0 12px ${c}99`:"none",transition:"all .15s"}}/>)}
-      </div>
-    </div>
-    {cardForm.name&&<div style={{background:`${cardForm.color}18`,border:`1.5px solid ${cardForm.color}44`,borderRadius:18,padding:"16px 18px"}}>
-      <div style={{fontSize:10,fontWeight:800,color:cardForm.color,letterSpacing:2,marginBottom:4}}>{cardForm.bank||"BANK"}</div>
-      <div style={{fontWeight:800,fontSize:15,color:C.text,marginBottom:8}}>{cardForm.name}</div>
-      <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:C.textSub}}>
-        <span>Dư nợ: <strong style={{color:C.red}}>{cardForm.used?cardForm.used+"₫":"—"}</strong></span>
-        <span>Hạn: <strong style={{color:C.accent}}>{cardForm.credit_limit?cardForm.credit_limit+"₫":"—"}</strong></span>
-      </div>
-    </div>}
+    <div><span style={lbl}>Màu thẻ</span><div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+      {CARD_PALETTE.map(c=><div key={c} onClick={()=>setCardForm(f=>({...f,color:c}))} style={{width:34,height:34,borderRadius:"50%",background:c,cursor:"pointer",border:cardForm.color===c?"3px solid white":"3px solid transparent",boxShadow:cardForm.color===c?`0 0 12px ${c}99`:"none",transition:"all .15s"}}/>)}
+    </div></div>
     <button style={btnSt(C.accent)} onClick={saveCard}>{cardModal?.mode==="add"?"✓ Thêm thẻ":"✓ Lưu thay đổi"}</button>
   </div>)
 
@@ -299,10 +281,12 @@ export default function App(){
       <div style={{padding:"48px 20px 0",background:`linear-gradient(180deg,${C.surface},${C.bg})`}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
           <div>
-            <div style={{fontSize:12,color:C.textSub,marginBottom:3}}>Tháng {thisMonth+1} / {thisYear}</div>
-            <div style={{fontSize:26,fontWeight:800,letterSpacing:-1}}>Tổng quan 📊</div>
+            <div style={{fontSize:12,color:C.textSub,marginBottom:2}}>Tháng {thisMonth+1}/{thisYear}</div>
+            <div style={{fontSize:24,fontWeight:800,letterSpacing:-1}}>Xin chào, {displayName.split(" ").pop()} 👋</div>
           </div>
-          <button onClick={signOut} style={{background:`${C.red}18`,border:`1px solid ${C.red}33`,borderRadius:20,padding:"7px 14px",color:C.red,fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Đăng xuất</button>
+          <button onClick={()=>setShowProfile(true)} style={{background:"none",border:"none",cursor:"pointer",padding:0}}>
+            <Avatar name={displayName} color={avatarColor} size={42}/>
+          </button>
         </div>
         <div style={{background:"linear-gradient(140deg,#0f1d32,#0a1525)",border:`1.5px solid ${C.borderLight}`,borderRadius:26,padding:"22px 22px 20px",marginBottom:18,position:"relative",overflow:"hidden"}}>
           <div style={{position:"absolute",top:-50,right:-50,width:200,height:200,borderRadius:"50%",background:`radial-gradient(circle,${C.accent}10,transparent 70%)`}}/>
@@ -330,16 +314,14 @@ export default function App(){
           <div><div style={{...secTitle,marginBottom:4}}>Chi tiêu 7 ngày</div><div style={{fontSize:20,fontWeight:800,color:C.red}}>{fmtShort(spark.reduce((s,v)=>s+v,0))}</div><div style={{fontSize:11,color:C.textMuted,marginTop:2}}>~{fmtShort(spark.reduce((s,v)=>s+v,0)/7)}/ngày</div></div>
           <Sparkline data={spark} color={C.red}/>
         </div>
-
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
           <div style={secTitle}>Tài khoản</div>
           <button onClick={openAddAcc} style={{background:`${C.accent}18`,border:`1px solid ${C.accent}44`,borderRadius:20,padding:"5px 14px",color:C.accent,fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>+ Thêm</button>
         </div>
         <div style={{display:"flex",gap:12,overflowX:"auto",paddingBottom:4,scrollbarWidth:"none",marginBottom:22}}>
           {accounts.map(acc=><AccCard key={acc.id} acc={acc} onClick={()=>openEditAcc(acc)}/>)}
-          {accounts.length===0&&<button onClick={openAddAcc} style={{flexShrink:0,width:160,height:130,borderRadius:22,border:`2px dashed ${C.border}`,background:"transparent",color:C.textMuted,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>+ Thêm tài khoản</button>}
+          {accounts.length===0&&<button onClick={openAddAcc} style={{flexShrink:0,width:160,height:130,borderRadius:22,border:`2px dashed ${C.border}`,background:"transparent",color:C.textMuted,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>+ Tài khoản</button>}
         </div>
-
         {creditCards.length>0&&<>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
             <div style={secTitle}>Thẻ tín dụng</div>
@@ -360,7 +342,6 @@ export default function App(){
           <div style={{...secTitle,marginBottom:12}}>Thẻ tín dụng</div>
           <button onClick={openAddCard} style={{width:"100%",padding:"16px 0",borderRadius:18,border:`2px dashed ${C.border}`,background:"transparent",color:C.textMuted,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>+ Thêm thẻ tín dụng</button>
         </div>}
-
         {catList.length>0&&<><div style={{...secTitle,marginBottom:12}}>Chi tiêu theo danh mục</div>
           <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:20,overflow:"hidden",marginBottom:22}}>
             {catList.map(([cat,amt],i)=>{const pct=Math.round(amt/monthExpense*100),color=CAT_COLORS[i%CAT_COLORS.length];return(
@@ -374,27 +355,24 @@ export default function App(){
             )})}
           </div>
         </>}
-
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
           <div style={secTitle}>Gần đây</div>
           <button onClick={()=>setTab("transactions")} style={{background:"none",border:"none",color:C.accent,fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Xem tất cả →</button>
         </div>
         {transactions.slice(0,5).map(tx=><TxRow key={tx.id} tx={tx} accounts={accounts} onDelete={deleteTx}/>)}
-        {transactions.length===0&&<div style={{textAlign:"center",color:C.textMuted,padding:32,fontSize:14}}>Chưa có giao dịch nào</div>}
+        {transactions.length===0&&<div style={{textAlign:"center",color:C.textMuted,padding:32,fontSize:14}}>Chưa có giao dịch nào. Thêm giao dịch đầu tiên! 🎯</div>}
       </div>
     </div>}
 
-    {/* ═══ TRANSACTIONS ═══ */}
     {tab==="transactions"&&<div style={{padding:"52px 16px 0"}}>
       <div style={{fontSize:26,fontWeight:800,letterSpacing:-1,marginBottom:18}}>Giao dịch 📋</div>
       <div style={{display:"flex",gap:8,marginBottom:18}}>
         {["all","thu","chi"].map(f=><button key={f} style={filtB(filterType===f)} onClick={()=>setFilterType(f)}>{f==="all"?"Tất cả":f==="thu"?"📈 Thu":"📉 Chi"}</button>)}
       </div>
-      {filtered.length===0&&<div style={{textAlign:"center",color:C.textMuted,padding:48,fontSize:14}}>Chưa có giao dịch</div>}
+      {filtered.length===0&&<div style={{textAlign:"center",color:C.textMuted,padding:48}}>Chưa có giao dịch</div>}
       {filtered.map(tx=><TxRow key={tx.id} tx={tx} accounts={accounts} onDelete={deleteTx}/>)}
     </div>}
 
-    {/* ═══ ADD ═══ */}
     {tab==="add"&&<div style={{padding:"52px 16px 0"}}>
       <div style={{marginBottom:24}}><div style={{fontSize:26,fontWeight:800,letterSpacing:-1,marginBottom:4}}>Thêm giao dịch ✍️</div><div style={{fontSize:13,color:C.textSub}}>Ghi lại thu nhập hoặc chi tiêu</div></div>
       <div style={{display:"flex",gap:10,marginBottom:22}}>
@@ -403,51 +381,28 @@ export default function App(){
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         <div><span style={lbl}>Số tiền (VNĐ)</span><input style={{...inputSt,fontSize:22,fontWeight:800,color:form.type==="thu"?C.green:C.red}} placeholder="0" value={form.amount} onChange={e=>setForm(f=>({...f,amount:fmtInput(e.target.value)}))} inputMode="numeric"/></div>
-        <div><span style={lbl}>Danh mục</span>
-          <select style={selSt} value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}>
-            <option value="">-- Chọn danh mục --</option>
-            {(form.type==="thu"?CATS_THU:CATS_CHI).map(c=><option key={c}>{c}</option>)}
-          </select>
-        </div>
-        <div><span style={lbl}>Tài khoản</span>
-          <select style={selSt} value={form.account_id} onChange={e=>setForm(f=>({...f,account_id:e.target.value}))}>
-            {accounts.map(a=><option key={a.id} value={a.id}>{a.icon} {a.name} — {fmtShort(a.balance)}</option>)}
-          </select>
-        </div>
+        <div><span style={lbl}>Danh mục</span><select style={selSt} value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}><option value="">-- Chọn danh mục --</option>{(form.type==="thu"?CATS_THU:CATS_CHI).map(c=><option key={c}>{c}</option>)}</select></div>
+        <div><span style={lbl}>Tài khoản</span><select style={selSt} value={form.account_id} onChange={e=>setForm(f=>({...f,account_id:e.target.value}))}>{accounts.map(a=><option key={a.id} value={a.id}>{a.icon} {a.name} — {fmtShort(a.balance)}</option>)}</select></div>
         <div><span style={lbl}>Ngày</span><input style={inputSt} type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))}/></div>
-        <div><span style={lbl}>Ghi chú</span><input style={inputSt} placeholder="Mô tả giao dịch..." value={form.note} onChange={e=>setForm(f=>({...f,note:e.target.value}))}/></div>
-        <button style={{...btnSt(form.type==="thu"?C.green:C.red),opacity:savingTx?0.7:1}} onClick={addTransaction} disabled={savingTx}>
-          {savingTx?"⏳ Đang lưu...":form.type==="thu"?"✓ Ghi nhận thu nhập":"✓ Ghi nhận chi tiêu"}
-        </button>
+        <div><span style={lbl}>Ghi chú</span><input style={inputSt} placeholder="Mô tả..." value={form.note} onChange={e=>setForm(f=>({...f,note:e.target.value}))}/></div>
+        <button style={{...btnSt(form.type==="thu"?C.green:C.red),opacity:savingTx?0.7:1}} onClick={addTransaction} disabled={savingTx}>{savingTx?"⏳ Đang lưu...":form.type==="thu"?"✓ Ghi nhận thu nhập":"✓ Ghi nhận chi tiêu"}</button>
       </div>
     </div>}
 
-    {/* ═══ CARDS ═══ */}
     {tab==="cards"&&<div style={{padding:"52px 16px 0"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-        <div style={{fontSize:26,fontWeight:800,letterSpacing:-1}}>Thẻ tín dụng 💳</div>
-        <button onClick={openAddCard} style={{background:`${C.accent}18`,border:`1.5px solid ${C.accent}55`,borderRadius:20,padding:"8px 18px",color:C.accent,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>+ Thêm</button>
-      </div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}><div style={{fontSize:26,fontWeight:800,letterSpacing:-1}}>Thẻ tín dụng 💳</div><button onClick={openAddCard} style={{background:`${C.accent}18`,border:`1.5px solid ${C.accent}55`,borderRadius:20,padding:"8px 18px",color:C.accent,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>+ Thêm</button></div>
       <div style={{fontSize:13,color:C.textSub,marginBottom:22}}>Hạn mức & lịch thanh toán</div>
-      {creditCards.length===0&&<div style={{textAlign:"center",padding:"48px 0"}}>
-        <div style={{fontSize:40,marginBottom:12}}>💳</div>
-        <div style={{color:C.textMuted,fontSize:14,marginBottom:20}}>Chưa có thẻ tín dụng nào</div>
-        <button onClick={openAddCard} style={{...btnSt(C.accent),width:"auto",padding:"12px 28px",display:"inline-block"}}>+ Thêm thẻ đầu tiên</button>
-      </div>}
+      {creditCards.length===0&&<div style={{textAlign:"center",padding:"48px 0"}}><div style={{fontSize:40,marginBottom:12}}>💳</div><div style={{color:C.textMuted,fontSize:14,marginBottom:20}}>Chưa có thẻ tín dụng nào</div><button onClick={openAddCard} style={{...btnSt(C.accent),width:"auto",padding:"12px 28px",display:"inline-block"}}>+ Thêm thẻ đầu tiên</button></div>}
       {creditCards.map(card=><CreditCardFull key={card.id} card={card} onEdit={()=>openEditCard(card)}/>)}
       {creditCards.length>0&&<div style={{background:`${C.red}0e`,border:`1px solid ${C.red}33`,borderRadius:20,padding:"18px 20px",marginTop:6}}>
         <div style={{fontSize:11,color:C.textMuted,letterSpacing:1.5,textTransform:"uppercase",marginBottom:10}}>TỔNG KẾT DƯ NỢ</div>
-        {creditCards.map(c=><div key={c.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-          <div style={{display:"flex",alignItems:"center",gap:8}}><div style={{width:8,height:8,borderRadius:"50%",background:c.color}}/><span style={{fontSize:13,color:C.textSub}}>{c.name}</span></div>
-          <span style={{fontWeight:700,fontSize:13,color:C.red}}>{fmt(c.used)}</span>
-        </div>)}
+        {creditCards.map(c=><div key={c.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><div style={{display:"flex",alignItems:"center",gap:8}}><div style={{width:8,height:8,borderRadius:"50%",background:c.color}}/><span style={{fontSize:13,color:C.textSub}}>{c.name}</span></div><span style={{fontWeight:700,fontSize:13,color:C.red}}>{fmt(c.used)}</span></div>)}
         <div style={{height:1,background:C.border,margin:"12px 0"}}/>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontWeight:800,fontSize:14,color:C.text}}>Tổng cộng</span><span style={{fontWeight:900,fontSize:18,color:C.red}}>{fmt(totalDebt)}</span></div>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:8}}><span style={{fontSize:12,color:C.textSub}}>Tổng tối thiểu cần trả</span><span style={{fontWeight:800,fontSize:14,color:C.accent}}>{fmt(Math.round(totalDebt*.05))}</span></div>
       </div>}
     </div>}
 
-    {/* ═══ ACCOUNTS TAB ═══ */}
     {tab==="accounts"&&<div style={{padding:"52px 16px 0"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
         <div><div style={{fontSize:26,fontWeight:800,letterSpacing:-1,marginBottom:2}}>Tài khoản 🏦</div><div style={{fontSize:13,color:C.textSub}}>Tổng: {fmt(totalBalance)}</div></div>
@@ -460,7 +415,7 @@ export default function App(){
       </div>)}
     </div>}
 
-    {/* ═══ FLOATING NAV ═══ */}
+    {/* NAV */}
     <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:100,padding:"0 14px 14px",background:`linear-gradient(0deg,${C.bg} 55%,transparent)`}}>
       <div style={{background:C.glass,backdropFilter:"blur(24px) saturate(180%)",border:`1.5px solid ${C.borderLight}`,borderRadius:30,display:"flex",alignItems:"center",justifyContent:"space-around",padding:"6px 10px",boxShadow:"0 8px 40px rgba(0,0,0,.7),0 1px 0 rgba(255,255,255,.05) inset",maxWidth:480,margin:"0 auto"}}>
         <NavItem icon="🏠" label="Dashboard" active={tab==="overview"} onClick={()=>setTab("overview")}/>
@@ -471,7 +426,7 @@ export default function App(){
       </div>
     </div>
 
-    {/* ═══ ACCOUNT MODAL ═══ */}
+    {/* ACCOUNT MODAL */}
     {accModal&&<div style={moSt} onClick={()=>setAccModal(null)}>
       <div style={moBx} onClick={e=>e.stopPropagation()}>
         <div style={dragPill}/>
@@ -498,7 +453,7 @@ export default function App(){
       </div>
     </div>}
 
-    {/* ═══ CARD MODAL ═══ */}
+    {/* CARD MODAL */}
     {cardModal&&<div style={moSt} onClick={()=>setCardModal(null)}>
       <div style={moBx} onClick={e=>e.stopPropagation()}>
         <div style={dragPill}/>
@@ -509,5 +464,8 @@ export default function App(){
         <CardFormFields/>
       </div>
     </div>}
+
+    {/* PROFILE MODAL */}
+    {showProfile&&<Profile user={user} profile={profile} onUpdate={setProfile} onClose={()=>setShowProfile(false)}/>}
   </div>)
 }
