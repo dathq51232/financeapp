@@ -9,13 +9,14 @@ const C = {
 const AVATAR_COLORS = ['#17d9a1','#5b8def','#f0b429','#9f7aea','#f05252','#f97316','#ec4899','#14b8a6']
 
 export default function Auth() {
-  const [screen, setScreen] = useState('login') // login | register | forgot | verify
+  const [screen, setScreen] = useState('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPw, setConfirmPw] = useState('')
   const [fullName, setFullName] = useState('')
   const [avatarColor, setAvatarColor] = useState('#17d9a1')
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
   const [msg, setMsg] = useState('')
   const [showPw, setShowPw] = useState(false)
@@ -37,43 +38,40 @@ export default function Auth() {
     if (password !== confirmPw) { setError('Mật khẩu xác nhận không khớp'); setLoading(false); return }
     if (password.length < 6) { setError('Mật khẩu tối thiểu 6 ký tự'); setLoading(false); return }
     if (!fullName.trim()) { setError('Vui lòng nhập họ tên'); setLoading(false); return }
-    // Step 1: Sign up
     const { data, error } = await supabase.auth.signUp({
       email, password,
       options: { data: { full_name: fullName, avatar_color: avatarColor } }
     })
     if (error) { setError(error.message); setLoading(false); return }
-
-    // Step 2: If email confirmation disabled → session exists → already logged in
-    if (data.session) {
-      // Auto logged in, app will redirect
-      setLoading(false)
-      return
-    }
-
-    // Step 3: Email confirmation required
-    if (data.user && !data.session) {
-      setScreen('verify')
-    }
+    if (data.session) { setLoading(false); return }
+    if (data.user && !data.session) setScreen('verify')
     setLoading(false)
   }
 
   const handleForgot = async (e) => {
     e.preventDefault(); setLoading(true); reset()
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}`
+      redirectTo: window.location.origin
     })
     if (error) setError(error.message)
     else setMsg('📧 Link đặt lại mật khẩu đã gửi vào email!')
     setLoading(false)
   }
 
-  const initials = fullName.trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?'
+  const handleGoogle = async () => {
+    setGoogleLoading(true); reset()
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin }
+    })
+    if (error) { setError(error.message); setGoogleLoading(false) }
+  }
 
+  const initials = fullName.trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?'
   const inp = { width:'100%', background:C.surface, border:`1.5px solid ${C.border}`, borderRadius:14, padding:'13px 16px', color:C.text, fontSize:15, outline:'none', boxSizing:'border-box', fontFamily:'inherit' }
   const lbl = { fontSize:10, fontWeight:700, letterSpacing:2, color:C.textMuted, textTransform:'uppercase', marginBottom:7, display:'block' }
-  const btn = (bg) => ({ width:'100%', background:bg, border:'none', borderRadius:14, padding:'15px 0', color:bg===C.accent?'#07090f':C.text, fontWeight:800, fontSize:15, cursor:'pointer', fontFamily:'inherit', boxShadow:`0 4px 14px ${bg}44`, opacity:loading?0.7:1 })
-  const link = { background:'none', border:'none', color:C.accent, fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'inherit', textDecoration:'underline' }
+  const btn = (bg) => ({ width:'100%', background:bg, border:'none', borderRadius:14, padding:'15px 0', color:bg===C.accent||bg===C.green?'#07090f':C.text, fontWeight:800, fontSize:15, cursor:'pointer', fontFamily:'inherit', boxShadow:`0 4px 14px ${bg}44`, opacity:loading?0.7:1 })
+  const linkBtn = { background:'none', border:'none', color:C.accent, fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'inherit', textDecoration:'underline' }
 
   // ── VERIFY ──
   if (screen === 'verify') return (
@@ -92,7 +90,7 @@ export default function Auth() {
         <button onClick={()=>setScreen('login')} style={btn(C.accent)}>→ Đến trang đăng nhập</button>
         <div style={{marginTop:14, fontSize:12, color:C.textMuted}}>
           Không nhận được?{' '}
-          <button onClick={async()=>{await supabase.auth.resend({type:'signup',email});setMsg('✅ Đã gửi lại!')}} style={link}>Gửi lại</button>
+          <button onClick={async()=>{await supabase.auth.resend({type:'signup',email});setMsg('✅ Đã gửi lại!')}} style={linkBtn}>Gửi lại</button>
         </div>
         {msg && <div style={{marginTop:10, color:C.green, fontSize:13}}>{msg}</div>}
       </div>
@@ -106,7 +104,7 @@ export default function Auth() {
         <div style={{textAlign:'center', marginBottom:30}}>
           <div style={{fontSize:48, marginBottom:10}}>🔑</div>
           <div style={{fontSize:22, fontWeight:800, color:C.text, marginBottom:6}}>Quên mật khẩu?</div>
-          <div style={{fontSize:13, color:C.textMuted}}>Nhập email để nhận link đặt lại mật khẩu</div>
+          <div style={{fontSize:13, color:C.textMuted}}>Nhập email để nhận link đặt lại</div>
         </div>
         <div style={{background:C.card, border:`1.5px solid ${C.borderLight}`, borderRadius:22, padding:'24px 22px'}}>
           {error && <div style={{background:`${C.red}18`, border:`1px solid ${C.red}44`, borderRadius:12, padding:'10px 14px', marginBottom:14, fontSize:13, color:C.red}}>⚠️ {error}</div>}
@@ -116,7 +114,7 @@ export default function Auth() {
             <button type="submit" disabled={loading} style={btn(C.accent)}>{loading?'⏳ Đang gửi...':'📧 Gửi link đặt lại'}</button>
           </form>
           <div style={{textAlign:'center', marginTop:16}}>
-            <button onClick={()=>{setScreen('login');reset()}} style={link}>← Quay lại đăng nhập</button>
+            <button onClick={()=>{setScreen('login');reset()}} style={linkBtn}>← Quay lại đăng nhập</button>
           </div>
         </div>
       </div>
@@ -166,12 +164,32 @@ export default function Auth() {
                   </div>
                 </div>
                 <div style={{textAlign:'right', marginTop:-6}}>
-                  <button type="button" onClick={()=>{setScreen('forgot');reset()}} style={link}>Quên mật khẩu?</button>
+                  <button type="button" onClick={()=>{setScreen('forgot');reset()}} style={linkBtn}>Quên mật khẩu?</button>
                 </div>
                 <button type="submit" disabled={loading} style={btn(C.accent)}>{loading?'⏳ Đang đăng nhập...':'→ Đăng nhập'}</button>
+
+                {/* Divider */}
+                <div style={{display:'flex', alignItems:'center', gap:12}}>
+                  <div style={{flex:1, height:1, background:C.border}}/><span style={{fontSize:12, color:C.textMuted, flexShrink:0}}>hoặc</span><div style={{flex:1, height:1, background:C.border}}/>
+                </div>
+
+                {/* Google */}
+                <button type="button" onClick={handleGoogle} disabled={googleLoading}
+                  style={{width:'100%', background:C.surface, border:`1.5px solid ${C.border}`, borderRadius:14, padding:'13px 0', color:C.text, fontWeight:700, fontSize:14, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:10, opacity:googleLoading?0.7:1}}>
+                  {googleLoading ? '⏳ Đang chuyển hướng...' : <>
+                    <svg width="18" height="18" viewBox="0 0 48 48">
+                      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    </svg>
+                    Tiếp tục với Google
+                  </>}
+                </button>
+
                 <div style={{textAlign:'center', fontSize:13, color:C.textMuted}}>
                   Chưa có tài khoản?{' '}
-                  <button type="button" onClick={()=>{setScreen('register');reset()}} style={link}>Đăng ký ngay</button>
+                  <button type="button" onClick={()=>{setScreen('register');reset()}} style={linkBtn}>Đăng ký ngay</button>
                 </div>
               </div>
             </form>
@@ -185,7 +203,6 @@ export default function Auth() {
                   <input style={inp} type="text" placeholder="Nguyễn Văn A" value={fullName} onChange={e=>setFullName(e.target.value)} required autoComplete="name"/>
                 </div>
 
-                {/* Avatar preview */}
                 {fullName.trim() && (
                   <div style={{display:'flex', alignItems:'center', gap:14, background:C.surface, borderRadius:14, padding:'12px 16px'}}>
                     <div style={{width:48, height:48, borderRadius:'50%', background:avatarColor, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, fontWeight:800, color:'#07090f', flexShrink:0, boxShadow:`0 4px 12px ${avatarColor}66`}}>
@@ -228,9 +245,29 @@ export default function Auth() {
                 </div>
 
                 <button type="submit" disabled={loading} style={btn(C.green)}>{loading?'⏳ Đang tạo tài khoản...':'✓ Tạo tài khoản'}</button>
+
+                {/* Divider */}
+                <div style={{display:'flex', alignItems:'center', gap:12}}>
+                  <div style={{flex:1, height:1, background:C.border}}/><span style={{fontSize:12, color:C.textMuted, flexShrink:0}}>hoặc</span><div style={{flex:1, height:1, background:C.border}}/>
+                </div>
+
+                {/* Google */}
+                <button type="button" onClick={handleGoogle} disabled={googleLoading}
+                  style={{width:'100%', background:C.surface, border:`1.5px solid ${C.border}`, borderRadius:14, padding:'13px 0', color:C.text, fontWeight:700, fontSize:14, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:10, opacity:googleLoading?0.7:1}}>
+                  {googleLoading ? '⏳ Đang chuyển hướng...' : <>
+                    <svg width="18" height="18" viewBox="0 0 48 48">
+                      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    </svg>
+                    Đăng ký với Google
+                  </>}
+                </button>
+
                 <div style={{textAlign:'center', fontSize:13, color:C.textMuted}}>
                   Đã có tài khoản?{' '}
-                  <button type="button" onClick={()=>{setScreen('login');reset()}} style={link}>Đăng nhập</button>
+                  <button type="button" onClick={()=>{setScreen('login');reset()}} style={linkBtn}>Đăng nhập</button>
                 </div>
               </div>
             </form>
