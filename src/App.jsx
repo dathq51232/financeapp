@@ -3,6 +3,7 @@ import { supabase } from "./lib/supabase"
 import * as db from "./lib/db"
 import Auth from "./pages/Auth"
 import Profile from "./pages/Profile"
+import Rental from "./pages/Rental"
 
 /* ════ PALETTE — professional blue/neutral ════ */
 const C={
@@ -71,6 +72,7 @@ function SidebarNav({tab,setTab,urgentCards,displayName,avatarColor,onProfileCli
     {icon:"➕",label:"Thêm giao dịch",key:"add"},
     {icon:"💳",label:"Thẻ tín dụng",key:"cards",badge:urgentCards},
     {icon:"🏦",label:"Tài khoản",key:"accounts"},
+    {icon:"🏨",label:"Nhà trọ",key:"rental"},
   ]
   return(
     <div className="sidebar">
@@ -597,13 +599,16 @@ export default function App(){
       </div>
     </div>}
 
+    {/* ═══ RENTAL MANAGEMENT ═══ */}
+    {tab==="rental"&&<Rental />}
+
     {/* ═══ BOTTOM NAV — mobile only ═══ */}
-    <div className="bottom-nav" style={{zIndex:100,background:C.white,borderTop:`1px solid ${C.line}`,alignItems:"center",justifyContent:"space-around",padding:"0 8px 8px",boxShadow:"0 -2px 12px rgba(0,0,0,.06)"}}>
+    <div className="bottom-nav" style={{zIndex:100,background:C.white,borderTop:`1px solid ${C.line}`,alignItems:"center",justifyContent:"space-around",padding:"0 4px 8px",boxShadow:"0 -2px 12px rgba(0,0,0,.06)"}}>
       <NavItem icon="🏠" label="Tổng quan" active={tab==="overview"} onClick={()=>setTab("overview")}/>
       <NavItem icon="📋" label="Giao dịch" active={tab==="transactions"} onClick={()=>setTab("transactions")}/>
       <NavItem icon="+" active={tab==="add"} onClick={()=>setTab("add")} special/>
       <NavItem icon="💳" label="Thẻ" active={tab==="cards"} onClick={()=>setTab("cards")} badge={urgentCards.length}/>
-      <NavItem icon="🏦" label="Tài khoản" active={tab==="accounts"} onClick={()=>setTab("accounts")}/>
+      <NavItem icon="🏨" label="Nhà trọ" active={tab==="rental"} onClick={()=>setTab("rental")}/>
     </div>
 
     {/* ═══ ACCOUNT MODAL ═══ */}
