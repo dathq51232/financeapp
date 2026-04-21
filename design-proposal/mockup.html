@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>FinanceApp · Đề xuất giao diện MISA-style</title>
+<style>
+  :root{
+    --bg:#f4f5f7;
+    --white:#ffffff;
+    --line:#e8ebf0;
+    --lineSoft:#f0f2f5;
+    --text:#1f2937;
+    --sub:#6b7280;
+    --muted:#9aa3b2;
+    --primary:#e8302c;     /* MISA red */
+    --primarySoft:#fdecec;
+    --green:#16a34a;
+    --greenSoft:#e8f5ee;
+    --red:#dc2626;
+    --redSoft:#fdecec;
+    --blue:#2563eb;
+    --blueSoft:#eaf1fd;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+  body{font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:32px 20px}
+  h1{font-size:26px;font-weight:700;margin-bottom:6px;color:var(--text)}
+  .lead{color:var(--sub);font-size:14px;max-width:780px;margin-bottom:20px;line-height:1.6}
+  .principles{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px}
+  .chip{background:var(--white);border:1px solid var(--line);padding:5px 12px;border-radius:6px;font-size:12px;color:var(--sub)}
+  .chip b{color:var(--primary)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:24px;max-width:1500px;margin:0 auto}
+  .frame{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:18px;position:relative;overflow:hidden}
+  .frame .label{position:absolute;top:14px;right:16px;font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--muted)}
+  .phone{width:100%;max-width:390px;margin:0 auto;aspect-ratio:390/780;background:var(--bg);border-radius:36px;border:1px solid var(--line);overflow:hidden;position:relative;box-shadow:0 12px 40px rgba(0,0,0,.08)}
+  .notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:110px;height:24px;background:#111;border-radius:999px;z-index:20}
+  .screen{padding:42px 0 80px;height:100%;overflow:hidden;position:relative;background:var(--bg)}
+
+  /* ===== header ===== */
+  .header{background:var(--primary);padding:14px 16px 22px;color:#fff;margin-bottom:-14px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .topbar .title{font-size:16px;font-weight:700}
+  .topbar .ic{width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;opacity:.95}
+  .bal-lab{font-size:12px;opacity:.85;margin-bottom:2px}
+  .bal-val{font-size:26px;font-weight:700;letter-spacing:-.5px}
+  .bal-sub{font-size:11px;opacity:.85;margin-top:2px}
+
+  /* ===== summary row (overlapping) ===== */
+  .summary{margin:0 16px;background:var(--white);border:1px solid var(--line);border-radius:10px;display:flex;position:relative;z-index:2;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+  .summary .col{flex:1;padding:12px;text-align:center}
+  .summary .col + .col{border-left:1px solid var(--line)}
+  .summary .lb{font-size:11px;color:var(--sub);margin-bottom:4px}
+  .summary .vl{font-size:14px;font-weight:700}
+  .summary .vl.g{color:var(--green)}
+  .summary .vl.r{color:var(--red)}
+
+  /* ===== quick actions ===== */
+  .quick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 16px 4px}
+  .qa{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:12px 4px;text-align:center}
+  .qa .i{width:34px;height:34px;margin:0 auto 6px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px}
+  .qa .t{font-size:11px;color:var(--text);font-weight:500}
+  .qa.c1 .i{background:var(--redSoft);color:var(--red)}
+  .qa.c2 .i{background:var(--greenSoft);color:var(--green)}
+  .qa.c3 .i{background:var(--blueSoft);color:var(--blue)}
+  .qa.c4 .i{background:var(--lineSoft);color:var(--sub)}
+
+  /* ===== section ===== */
+  .sec{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 8px}
+  .sec h3{font-size:14px;font-weight:700}
+  .sec a{font-size:12px;color:var(--primary);font-weight:500}
+
+  /* ===== list (no card, clean rows) ===== */
+  .list{background:var(--white);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .date-h{padding:10px 16px;background:var(--lineSoft);font-size:11px;color:var(--sub);font-weight:600;display:flex;justify-content:space-between}
+  .date-h span:last-child{color:var(--text);font-weight:600}
+  .tx{display:flex;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--lineSoft)}
+  .tx:last-child{border-bottom:none}
+  .tx .ic{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;background:var(--lineSoft)}
+  .tx .mid{flex:1;min-width:0}
+  .tx .nm{font-size:13px;font-weight:600;color:var(--text)}
+  .tx .nt{font-size:11px;color:var(--sub);margin-top:2px}
+  .tx .am{font-size:14px;font-weight:700;text-align:right;white-space:nowrap}
+  .tx .am.g{color:var(--green)}
+  .tx .am.r{color:var(--text)}
+
+  /* ===== bottom nav ===== */
+  .nav{position:absolute;bottom:0;left:0;right:0;height:58px;background:var(--white);border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-around;z-index:10}
+  .ni{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;cursor:pointer}
+  .ni .i{font-size:18px;color:var(--muted)}
+  .ni .t{font-size:10px;color:var(--muted);font-weight:500}
+  .ni.active .i,.ni.active .t{color:var(--primary)}
+  .fab{width:48px;height:48px;border-radius:50%;background:var(--primary);margin-top:-20px;display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff;font-weight:300;box-shadow:0 4px 12px rgba(232,48,44,.35)}
+
+  /* ===== stats screen ===== */
+  .tabs{display:flex;padding:0 16px;gap:4px;background:var(--white);border-bottom:1px solid var(--line)}
+  .tab{flex:1;text-align:center;padding:12px 0;font-size:13px;color:var(--sub);font-weight:500;position:relative}
+  .tab.active{color:var(--primary);font-weight:700}
+  .tab.active::after{content:"";position:absolute;bottom:-1px;left:20%;right:20%;height:2px;background:var(--primary);border-radius:2px}
+
+  .period{padding:12px 16px;background:var(--white);display:flex;align-items:center;justify-content:center;gap:20px;border-bottom:1px solid var(--line);font-size:13px;font-weight:600}
+  .period .arrow{color:var(--sub);font-size:14px;cursor:pointer}
+
+  .stats-hero{background:var(--white);padding:20px 16px;text-align:center;border-bottom:1px solid var(--line)}
+  .stats-hero .lb{font-size:12px;color:var(--sub);margin-bottom:4px}
+  .stats-hero .vl{font-size:24px;font-weight:700;color:var(--text)}
+  .stats-hero .row{display:flex;justify-content:space-around;margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+  .stats-hero .row .col .l{font-size:11px;color:var(--sub)}
+  .stats-hero .row .col .v{font-size:14px;font-weight:700;margin-top:2px}
+
+  /* donut */
+  .donut-wrap{background:var(--white);padding:18px 16px;display:flex;gap:16px;align-items:center;border-bottom:1px solid var(--line)}
+  .donut{position:relative;width:110px;height:110px;flex-shrink:0}
+  .donut .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .donut .center .l{font-size:10px;color:var(--sub)}
+  .donut .center .v{font-size:14px;font-weight:700}
+  .leg{flex:1}
+  .leg .li{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:6px}
+  .leg .dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+  .leg .nm{flex:1;color:var(--text)}
+  .leg .pc{color:var(--sub);font-weight:600}
+
+  .cat-list{background:var(--white)}
+  .cat-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--lineSoft)}
+  .cat-row:last-child{border-bottom:none}
+  .cat-row .ic{width:32px;height:32px;border-radius:50%;background:var(--lineSoft);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+  .cat-row .mid{flex:1}
+  .cat-row .top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px}
+  .cat-row .top b{font-weight:600}
+  .cat-row .pb{height:4px;background:var(--lineSoft);border-radius:3px;overflow:hidden}
+  .cat-row .pb div{height:100%;background:var(--primary);border-radius:3px}
+
+  /* ===== accounts screen ===== */
+  .acc-list{background:var(--white)}
+  .acc-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--lineSoft)}
+  .acc-row .ic{width:40px;height:40px;border-radius:50%;background:var(--primarySoft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .acc-row .mid{flex:1}
+  .acc-row .nm{font-size:13px;font-weight:600}
+  .acc-row .sb{font-size:11px;color:var(--sub);margin-top:2px}
+  .acc-row .vl{font-size:14px;font-weight:700;text-align:right}
+  .acc-row .arrow{color:var(--muted);font-size:16px;margin-left:6px}
+
+  .group-title{padding:14px 16px 8px;font-size:11px;color:var(--sub);font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+
+  footer{max-width:1500px;margin:32px auto 0;color:var(--sub);font-size:13px;text-align:center;line-height:1.8;background:var(--white);border:1px solid var(--line);border-radius:12px;padding:18px}
+  footer b{color:var(--primary)}
+</style>
+</head>
+<body>
+
+<h1>Đề xuất giao diện · Phong cách MISA</h1>
+<p class="lead">Tối giản tối đa: <b style="color:var(--text)">nền trắng + xám nhạt</b>, chỉ dùng <b style="color:var(--primary)">một màu chủ đạo đỏ MISA</b>, xanh lá cho "thu" và chữ đậm cho "chi". Bỏ hết gradient, glow, viền màu. Phân cách bằng đường kẻ mỏng &amp; nhóm theo ngày — giống hệt sổ thu chi MISA Money Keeper.</p>
+<div class="principles">
+  <span class="chip">Nền: <b>#f4f5f7</b> / trắng</span>
+  <span class="chip">Chủ đạo: <b>đỏ MISA</b></span>
+  <span class="chip">Thu: xanh · Chi: đen</span>
+  <span class="chip">Không gradient</span>
+  <span class="chip">Không glow / shadow đậm</span>
+  <span class="chip">Bo <b>8-10px</b></span>
+  <span class="chip">Font 400-700</span>
+</div>
+
+<div class="grid">
+
+  <!-- ============== SCREEN 1: HOME ============== -->
+  <div class="frame">
+    <span class="label">01 · TRANG CHỦ</span>
+    <div class="phone"><div class="notch"></div><div class="screen">
+
+      <div class="header">
+        <div class="topbar">
+          <div class="ic">☰</div>
+          <div class="title">Sổ thu chi</div>
+          <div class="ic">🔔</div>
+        </div>
+        <div class="bal-lab">Số dư hiện tại</div>
+        <div class="bal-val">84.320.000 ₫</div>
+        <div class="bal-sub">Tháng 4/2026</div>
+      </div>
+
+      <div class="summary">
+        <div class="col"><div class="lb">Thu</div><div class="vl g">+24.5 tr</div></div>
+        <div class="col"><div class="lb">Chi</div><div class="vl r">-12.1 tr</div></div>
+        <div class="col"><div class="lb">Còn lại</div><div class="vl">12.4 tr</div></div>
+      </div>
+
+      <div class="quick">
+        <div class="qa c1"><div class="i">−</div><div class="t">Ghi chi</div></div>
+        <div class="qa c2"><div class="i">+</div><div class="t">Ghi thu</div></div>
+        <div class="qa c3"><div class="i">⇄</div><div class="t">Chuyển</div></div>
+        <div class="qa c4"><div class="i">⋯</div><div class="t">Khác</div></div>
+      </div>
+
+      <div class="sec"><h3>Giao dịch gần đây</h3><a>Xem tất cả</a></div>
+
+      <div class="list">
+        <div class="date-h"><span>Hôm nay · 21/04</span><span>-505.000 ₫</span></div>
+        <div class="tx"><div class="ic">🍜</div><div class="mid"><div class="nm">Ăn uống</div><div class="nt">Bún bò Huế</div></div><div class="am r">-85.000</div></div>
+        <div class="tx"><div class="ic">🛒</div><div class="mid"><div class="nm">Mua sắm</div><div class="nt">Siêu thị Coop</div></div><div class="am r">-420.000</div></div>
+
+        <div class="date-h"><span>Hôm qua · 20/04</span><span>+18.415.000 ₫</span></div>
+        <div class="tx"><div class="ic">💼</div><div class="mid"><div class="nm">Lương</div><div class="nt">Lương tháng 4</div></div><div class="am g">+18.500.000</div></div>
+        <div class="tx"><div class="ic">🚗</div><div class="mid"><div class="nm">Di chuyển</div><div class="nt">Grab đi làm</div></div><div class="am r">-85.000</div></div>
+      </div>
+
+      <div class="nav">
+        <div class="ni active"><div class="i">🏠</div><div class="t">Sổ</div></div>
+        <div class="ni"><div class="i">📊</div><div class="t">Báo cáo</div></div>
+        <div class="fab">+</div>
+        <div class="ni"><div class="i">💳</div><div class="t">Tài khoản</div></div>
+        <div class="ni"><div class="i">👤</div><div class="t">Cá nhân</div></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ============== SCREEN 2: BÁO CÁO ============== -->
+  <div class="frame">
+    <span class="label">02 · BÁO CÁO</span>
+    <div class="phone"><div class="notch"></div><div class="screen">
+
+      <div class="header" style="padding-bottom:14px">
+        <div class="topbar" style="margin-bottom:0">
+          <div class="ic">←</div>
+          <div class="title">Báo cáo thu chi</div>
+          <div class="ic">⋮</div>
+        </div>
+      </div>
+
+      <div class="tabs" style="margin-top:0">
+        <div class="tab">Tuần</div>
+        <div class="tab active">Tháng</div>
+        <div class="tab">Năm</div>
+        <div class="tab">Tùy chọn</div>
+      </div>
+
+      <div class="period">
+        <span class="arrow">‹</span>
+        <span>Tháng 4, 2026</span>
+        <span class="arrow">›</span>
+      </div>
+
+      <div class="stats-hero">
+        <div class="lb">Chênh lệch</div>
+        <div class="vl" style="color:var(--green)">+12.400.000 ₫</div>
+        <div class="row">
+          <div class="col"><div class="l">Tổng thu</div><div class="v" style="color:var(--green)">24.500.000</div></div>
+          <div class="col"><div class="l">Tổng chi</div><div class="v">12.100.000</div></div>
+        </div>
+      </div>
+
+      <div class="donut-wrap">
+        <div class="donut">
+          <svg width="110" height="110" viewBox="0 0 110 110">
+            <circle cx="55" cy="55" r="42" fill="none" stroke="#f0f2f5" stroke-width="14"/>
+            <circle cx="55" cy="55" r="42" fill="none" stroke="#e8302c" stroke-width="14" stroke-dasharray="103 264" stroke-dashoffset="-66" transform="rotate(-90 55 55)"/>
+            <circle cx="55" cy="55" r="42" fill="none" stroke="#f59e0b" stroke-width="14" stroke-dasharray="79 264" stroke-dashoffset="-169" transform="rotate(-90 55 55)"/>
+            <circle cx="55" cy="55" r="42" fill="none" stroke="#2563eb" stroke-width="14" stroke-dasharray="29 264" stroke-dashoffset="-248" transform="rotate(-90 55 55)"/>
+          </svg>
+          <div class="center"><div class="l">Tổng chi</div><div class="v">12.1 tr</div></div>
+        </div>
+        <div class="leg">
+          <div class="li"><span class="dot" style="background:#e8302c"></span><span class="nm">Ăn uống</span><span class="pc">38%</span></div>
+          <div class="li"><span class="dot" style="background:#f59e0b"></span><span class="nm">Nhà ở</span><span class="pc">30%</span></div>
+          <div class="li"><span class="dot" style="background:#2563eb"></span><span class="nm">Di chuyển</span><span class="pc">11%</span></div>
+          <div class="li"><span class="dot" style="background:#9aa3b2"></span><span class="nm">Khác</span><span class="pc">21%</span></div>
+        </div>
+      </div>
+
+      <div class="group-title">Chi tiết theo danh mục</div>
+      <div class="cat-list">
+        <div class="cat-row"><div class="ic">🍜</div><div class="mid"><div class="top"><b>Ăn uống</b><span>4.598.000 ₫</span></div><div class="pb"><div style="width:78%"></div></div></div></div>
+        <div class="cat-row"><div class="ic">🏠</div><div class="mid"><div class="top"><b>Nhà ở</b><span>3.630.000 ₫</span></div><div class="pb"><div style="width:62%;background:#f59e0b"></div></div></div></div>
+        <div class="cat-row"><div class="ic">🚗</div><div class="mid"><div class="top"><b>Di chuyển</b><span>1.331.000 ₫</span></div><div class="pb"><div style="width:24%;background:#2563eb"></div></div></div></div>
+        <div class="cat-row"><div class="ic">🛍</div><div class="mid"><div class="top"><b>Mua sắm</b><span>980.000 ₫</span></div><div class="pb"><div style="width:18%;background:#9aa3b2"></div></div></div></div>
+      </div>
+
+      <div class="nav">
+        <div class="ni"><div class="i">🏠</div><div class="t">Sổ</div></div>
+        <div class="ni active"><div class="i">📊</div><div class="t">Báo cáo</div></div>
+        <div class="fab">+</div>
+        <div class="ni"><div class="i">💳</div><div class="t">Tài khoản</div></div>
+        <div class="ni"><div class="i">👤</div><div class="t">Cá nhân</div></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ============== SCREEN 3: TÀI KHOẢN ============== -->
+  <div class="frame">
+    <span class="label">03 · TÀI KHOẢN</span>
+    <div class="phone"><div class="notch"></div><div class="screen">
+
+      <div class="header">
+        <div class="topbar">
+          <div class="ic">←</div>
+          <div class="title">Tài khoản</div>
+          <div class="ic">+</div>
+        </div>
+        <div class="bal-lab">Tổng tài sản</div>
+        <div class="bal-val">84.320.000 ₫</div>
+        <div class="bal-sub">4 tài khoản · 1 thẻ tín dụng</div>
+      </div>
+
+      <div style="height:16px"></div>
+
+      <div class="group-title">Tiền mặt &amp; Ngân hàng</div>
+      <div class="acc-list">
+        <div class="acc-row"><div class="ic">👛</div><div class="mid"><div class="nm">Ví tiền mặt</div><div class="sb">Tiền mặt</div></div><div class="vl">4.200.000 ₫</div><div class="arrow">›</div></div>
+        <div class="acc-row"><div class="ic">🏦</div><div class="mid"><div class="nm">Vietcombank</div><div class="sb">•••• 4821</div></div><div class="vl">62.120.000 ₫</div><div class="arrow">›</div></div>
+        <div class="acc-row"><div class="ic">📈</div><div class="mid"><div class="nm">Tiết kiệm BIDV</div><div class="sb">Kỳ hạn 6 tháng</div></div><div class="vl">18.000.000 ₫</div><div class="arrow">›</div></div>
+      </div>
+
+      <div class="group-title">Thẻ tín dụng</div>
+      <div class="acc-list">
+        <div class="acc-row"><div class="ic">💳</div><div class="mid"><div class="nm">VCB Visa Platinum</div><div class="sb">Đã dùng 31.0/50.0 tr · TT còn 6 ngày</div></div><div class="vl" style="color:var(--red)">-31.000.000 ₫</div><div class="arrow">›</div></div>
+      </div>
+
+      <div class="group-title">Mục tiêu tiết kiệm</div>
+      <div class="acc-list">
+        <div class="acc-row"><div class="ic">✈</div><div class="mid"><div class="nm">Du lịch Nhật Bản</div><div class="sb">Đạt 72% · Còn 8.4 tr</div></div><div class="vl" style="color:var(--green)">21.600.000 ₫</div><div class="arrow">›</div></div>
+        <div class="acc-row"><div class="ic">💻</div><div class="mid"><div class="nm">Macbook Pro M4</div><div class="sb">Đạt 45% · Còn 22 tr</div></div><div class="vl" style="color:var(--green)">18.000.000 ₫</div><div class="arrow">›</div></div>
+      </div>
+
+      <div class="nav">
+        <div class="ni"><div class="i">🏠</div><div class="t">Sổ</div></div>
+        <div class="ni"><div class="i">📊</div><div class="t">Báo cáo</div></div>
+        <div class="fab">+</div>
+        <div class="ni active"><div class="i">💳</div><div class="t">Tài khoản</div></div>
+        <div class="ni"><div class="i">👤</div><div class="t">Cá nhân</div></div>
+      </div>
+    </div></div>
+  </div>
+
+</div>
+
+<footer>
+<b>Nguyên tắc thiết kế — Tối giản kiểu MISA</b><br>
+① Chỉ <b>1 màu chủ đạo</b> (đỏ MISA) cho header + CTA — toàn app còn lại là trắng &amp; xám<br>
+② Bỏ gradient, glow, shadow đậm · Dùng <b>đường kẻ 1px</b> làm phân cách<br>
+③ Giao dịch nhóm theo <b>ngày</b>, có dải tổng cộng mỗi ngày (đặc trưng MISA)<br>
+④ Icon danh mục dùng nền tròn xám đồng nhất · Không tô màu rực rỡ<br>
+⑤ Header đỏ hiển thị số dư lớn · Card tóm tắt Thu/Chi/Còn lại "nhô" lên trên<br>
+⑥ Typography 400-700, không dùng 900 · Bo góc 8-10px thay vì 20-26px
+</footer>
+
+</body>
+</html>
