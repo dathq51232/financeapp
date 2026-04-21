@@ -80,7 +80,15 @@ create policy "own tenants"         on tenants         for all using (auth.uid()
 create policy "own meter_readings"  on meter_readings  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "own invoices"        on invoices        for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
--- 6. AUTO updated_at triggers
+-- 6. AUTO updated_at
+create or replace function update_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
 create trigger rooms_updated_at    before update on rooms    for each row execute function update_updated_at();
 create trigger tenants_updated_at  before update on tenants  for each row execute function update_updated_at();
 create trigger invoices_updated_at before update on invoices for each row execute function update_updated_at();
