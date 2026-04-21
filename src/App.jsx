@@ -63,6 +63,68 @@ function NavItem({icon,label,active,onClick,special,badge}){
   </button>)
 }
 
+/* ════ SIDEBAR NAV — desktop only ════ */
+function SidebarNav({tab,setTab,urgentCards,displayName,avatarColor,onProfileClick}){
+  const NAV=[
+    {icon:"🏠",label:"Tổng quan",key:"overview"},
+    {icon:"📋",label:"Giao dịch",key:"transactions"},
+    {icon:"➕",label:"Thêm giao dịch",key:"add"},
+    {icon:"💳",label:"Thẻ tín dụng",key:"cards",badge:urgentCards},
+    {icon:"🏦",label:"Tài khoản",key:"accounts"},
+  ]
+  return(
+    <div className="sidebar">
+      {/* Logo */}
+      <div style={{padding:"24px 20px 12px",borderBottom:`1px solid ${C.line}`}}>
+        <div style={{fontSize:20,fontWeight:800,color:C.primary,letterSpacing:"-.5px",display:"flex",alignItems:"center",gap:8}}>
+          <span>💰</span><span>FinanceApp</span>
+        </div>
+        <div style={{fontSize:11,color:C.textMuted,marginTop:3}}>Quản lý tài chính cá nhân</div>
+      </div>
+      {/* Nav items */}
+      <nav style={{flex:1,padding:"12px 10px",display:"flex",flexDirection:"column",gap:2}}>
+        {NAV.map(item=>(
+          <button key={item.key} onClick={()=>setTab(item.key)}
+            className="sidebar-item"
+            style={{
+              display:"flex",alignItems:"center",gap:12,
+              padding:"11px 14px",border:"none",borderRadius:10,
+              background:tab===item.key?C.primarySoft:"transparent",
+              color:tab===item.key?C.primary:C.textSub,
+              fontWeight:tab===item.key?600:400,
+              fontSize:14,cursor:"pointer",fontFamily:"inherit",
+              textAlign:"left",width:"100%",position:"relative",
+              transition:"background .15s,color .15s"
+            }}>
+            {tab===item.key&&<div style={{position:"absolute",left:0,top:"50%",transform:"translateY(-50%)",width:3,height:22,background:C.primary,borderRadius:"0 3px 3px 0"}}/> }
+            <span style={{fontSize:18,flexShrink:0}}>{item.icon}</span>
+            <span style={{flex:1}}>{item.label}</span>
+            {item.badge>0&&<div style={{background:C.red,color:"#fff",borderRadius:10,padding:"1px 7px",fontSize:11,fontWeight:700,flexShrink:0}}>{item.badge>9?"9+":item.badge}</div>}
+          </button>
+        ))}
+      </nav>
+      {/* Divider */}
+      <div style={{height:1,background:C.line,margin:"0 10px"}}/>
+      {/* User section */}
+      <div style={{padding:"12px 10px"}}>
+        <button onClick={onProfileClick} className="sidebar-item" style={{
+          display:"flex",alignItems:"center",gap:10,
+          width:"100%",border:"none",background:"transparent",cursor:"pointer",
+          padding:"10px 14px",borderRadius:10,fontFamily:"inherit",textAlign:"left",
+          transition:"background .15s"
+        }}>
+          <Avatar name={displayName} color={avatarColor} size={34}/>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:13,fontWeight:600,color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{displayName}</div>
+            <div style={{fontSize:11,color:C.textMuted,marginTop:1}}>Xem hồ sơ</div>
+          </div>
+          <span style={{fontSize:14,color:C.textMuted}}>›</span>
+        </button>
+      </div>
+    </div>
+  )
+}
+
 /* Một dòng giao dịch — phẳng, phân cách kẻ mỏng */
 function TxRow({tx,accounts,onDelete,last}){
   const [open,setOpen]=useState(false)
@@ -244,7 +306,9 @@ export default function App(){
     <div style={{fontSize:40}}>💰</div><div style={{color:C.textSub,fontSize:14}}>Đang tải dữ liệu...</div>
   </div>
 
-  return(<div style={{minHeight:"100vh",background:C.bg,color:C.text,fontFamily:"'Inter','Be Vietnam Pro',-apple-system,'Segoe UI',sans-serif",paddingBottom:88}}>
+  return(<div className="app-layout">
+    <SidebarNav tab={tab} setTab={setTab} urgentCards={urgentCards.length} displayName={displayName} avatarColor={avatarColor} onProfileClick={()=>setShowProfile(true)}/>
+    <div className="main-content" style={{background:C.bg,color:C.text,fontFamily:"'Inter','Be Vietnam Pro',-apple-system,'Segoe UI',sans-serif"}}>
 
     {/* ═══ OVERVIEW ═══ */}
     {tab==="overview"&&<div>
@@ -533,8 +597,8 @@ export default function App(){
       </div>
     </div>}
 
-    {/* ═══ BOTTOM NAV ═══ */}
-    <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:100,background:C.white,borderTop:`1px solid ${C.line}`,display:"flex",alignItems:"center",justifyContent:"space-around",padding:"0 8px",paddingBottom:8,maxWidth:480,margin:"0 auto",boxShadow:"0 -2px 12px rgba(0,0,0,.06)"}}>
+    {/* ═══ BOTTOM NAV — mobile only ═══ */}
+    <div className="bottom-nav" style={{zIndex:100,background:C.white,borderTop:`1px solid ${C.line}`,alignItems:"center",justifyContent:"space-around",padding:"0 8px 8px",boxShadow:"0 -2px 12px rgba(0,0,0,.06)"}}>
       <NavItem icon="🏠" label="Tổng quan" active={tab==="overview"} onClick={()=>setTab("overview")}/>
       <NavItem icon="📋" label="Giao dịch" active={tab==="transactions"} onClick={()=>setTab("transactions")}/>
       <NavItem icon="+" active={tab==="add"} onClick={()=>setTab("add")} special/>
@@ -543,9 +607,9 @@ export default function App(){
     </div>
 
     {/* ═══ ACCOUNT MODAL ═══ */}
-    {accModal&&<div style={moSt} onClick={()=>setAccModal(null)}>
-      <div style={moBx} onClick={e=>e.stopPropagation()}>
-        <div style={dragPill}/>
+    {accModal&&<div className="modal-overlay" style={moSt} onClick={()=>setAccModal(null)}>
+      <div className="modal-box" style={moBx} onClick={e=>e.stopPropagation()}>
+        <div className="drag-pill" style={dragPill}/>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
           <div style={{fontWeight:700,fontSize:17}}>{accModal.mode==="add"?"Thêm tài khoản":"Chỉnh sửa tài khoản"}</div>
           {accModal.mode==="edit"&&<button onClick={()=>deleteAcc(accModal.id)} style={{background:C.white,border:`1px solid ${C.primary}`,borderRadius:6,padding:"6px 12px",color:C.primary,fontWeight:600,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Xoá</button>}
@@ -565,9 +629,9 @@ export default function App(){
     </div>}
 
     {/* ═══ CARD MODAL ═══ */}
-    {cardModal&&<div style={moSt} onClick={()=>setCardModal(null)}>
-      <div style={moBx} onClick={e=>e.stopPropagation()}>
-        <div style={dragPill}/>
+    {cardModal&&<div className="modal-overlay" style={moSt} onClick={()=>setCardModal(null)}>
+      <div className="modal-box" style={moBx} onClick={e=>e.stopPropagation()}>
+        <div className="drag-pill" style={dragPill}/>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
           <div style={{fontWeight:700,fontSize:17}}>{cardModal.mode==="add"?"Thêm thẻ tín dụng":"Chỉnh sửa thẻ"}</div>
           {cardModal.mode==="edit"&&<button onClick={()=>deleteCard(cardModal.id)} style={{background:C.white,border:`1px solid ${C.primary}`,borderRadius:6,padding:"6px 12px",color:C.primary,fontWeight:600,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Xoá</button>}
@@ -578,5 +642,6 @@ export default function App(){
 
     {/* PROFILE MODAL */}
     {showProfile&&<Profile user={user} profile={profile} onUpdate={setProfile} onClose={()=>setShowProfile(false)}/>}
-  </div>)
+    </div>{/* end main-content */}
+  </div>/* end app-layout */)
 }

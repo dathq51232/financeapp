@@ -31,6 +31,7 @@
   --radius-lg:  14px;
   --shadow-sm:  0 1px 3px rgba(0,0,0,.08);
   --shadow:     0 2px 8px rgba(0,0,0,.1);
+  --sidebar-w:  240px;
 }
 
 html { scroll-behavior: smooth; }
@@ -55,6 +56,93 @@ input, select, button, textarea {
 
 select option { background: #ffffff; color: var(--text); }
 
-/* Transitions */
 button { transition: opacity .15s, background .15s, box-shadow .15s; }
 button:active { opacity: .85; }
+
+/* ═══ RESPONSIVE LAYOUT ═══ */
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar — hidden on mobile */
+.sidebar {
+  display: none;
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  flex-direction: column;
+  background: #ffffff;
+  border-right: 1px solid var(--border);
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 50;
+}
+
+/* Main content */
+.main-content {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 88px;
+  min-height: 100vh;
+}
+
+/* Bottom nav — visible on mobile */
+.bottom-nav {
+  display: flex;
+}
+
+/* Sidebar item hover */
+.sidebar-item:hover {
+  background: var(--surface2) !important;
+  color: var(--text) !important;
+}
+
+/* Desktop: ≥ 768px */
+@media (min-width: 768px) {
+  .sidebar {
+    display: flex;
+  }
+
+  .main-content {
+    margin-left: var(--sidebar-w);
+    padding-bottom: 0;
+  }
+
+  .bottom-nav {
+    display: none !important;
+  }
+
+  /* Centered page content on wide screens */
+  .page-inner {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 1280px) {
+  .page-inner {
+    max-width: 960px;
+  }
+}
+
+/* Modal — centered on desktop */
+@media (min-width: 768px) {
+  .modal-overlay {
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .modal-box {
+    border-radius: 16px !important;
+    max-width: 500px;
+    width: 100%;
+    max-height: 88vh !important;
+    padding: 28px !important;
+  }
+  .drag-pill {
+    display: none !important;
+  }
+}
